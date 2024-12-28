@@ -1,0 +1,59 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from google.colab import files
+
+print("Please upload your dataset")
+uploaded = files.upload()
+
+data = pd.read_csv(next(iter(uploaded.keys())))
+
+print(data.head())
+
+data = data.dropna()
+
+data['date'] = pd.to_datetime(data['date'], errors='coerce')
+
+data = data.dropna()
+
+def categorize_season(month):
+    if month in [12, 1, 2]:
+        return 'Winter'
+    elif month in [3, 4, 5]:
+        return 'Spring'
+    elif month in [6, 7, 8]:
+        return 'Summer'
+    elif month in [9, 10, 11]:
+        return 'Autumn'
+
+data['Season'] = data['date'].dt.month.apply(categorize_season)
+
+plt.figure(figsize=(14, 7))
+sns.lineplot(data=data, x='date', y='pm2_5', label='PM2.5')
+sns.lineplot(data=data, x='date', y='pm10', label='PM10')
+plt.title('Trends of PM2.5 and PM10 Over Time in Delhi')
+plt.xlabel('Date')
+plt.ylabel('Pollutant Levels')
+plt.legend()
+plt.grid()
+plt.show()
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Season', y='pm2_5', data=data, palette='viridis')
+plt.title('Seasonal Variation of PM2.5 Levels')
+plt.xlabel('Season')
+plt.ylabel('PM2.5 Levels')
+plt.grid()
+plt.show()
+
+pollutants = ['co', 'no', 'no2', 'o3', 'so2', 'pm2_5', 'pm10', 'nh3']
+correlation_matrix = data[pollutants].corr()
+
+plt.figure(figsize=(12, 8))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Correlation Between Pollutants')
+plt.show()
+
+sns.pairplot(data[pollutants], diag_kind='kde', plot_kws={'alpha': 0.6})
+plt.suptitle('Pairplot of Key Pollutants', y=1.02)
+plt.show()
